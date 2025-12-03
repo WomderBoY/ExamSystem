@@ -77,4 +77,19 @@ public class JsonUtil {
             throw new RuntimeException("Json deserialization failed", e);
         }
     }
+
+    /**
+     * 类型转换：将 Map/LinkedHashMap 转换为具体的 Java Bean
+     * 场景：处理 Message<Object> 时，body 是 Map，需要转为具体对象
+     */
+    public static <T> T convert(Object fromValue, Class<T> toValueType) {
+        return objectMapper.convertValue(fromValue, toValueType);
+    }
+
+    /**
+     * 类型转换：将 Map/LinkedHashMap 转换为复杂的泛型对象 (如 List<Question>)
+     */
+    public static <T> T convert(Object fromValue, TypeReference<T> toValueTypeRef) {
+        return objectMapper.convertValue(fromValue, toValueTypeRef);
+    }
 }
