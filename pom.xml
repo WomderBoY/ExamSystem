@@ -11,6 +11,7 @@
     <modules>
         <module>student-app</module>
         <module>teacher-app</module>
+        <module>common-core</module>
     </modules>
 
     <properties>

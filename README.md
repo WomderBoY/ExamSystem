@@ -27,17 +27,19 @@
 
 ## 项目整体架构
 
+组id: com.bit
 分为教师端和学生端两个子项目：
 ```
 ExamSystem/
+ ├── common-core/   公共组件
  ├── teacher-app/   教师端
  └── student-app/   学生端
 ```
 
 教师端：
 ```
-teacher-app/
- ├── java/
+teacher-app/src/main
+ ├── java/com.bit.teacher-app
  │   ├── controller/        
  │   ├── view/              
  │   ├── model/             
@@ -55,7 +57,7 @@ teacher-app/
 学生端：
 ```
 student-app/
- ├── java/
+ ├── java/com.bit.student-app
  │   ├── controller/
  │   ├── view/
  │   ├── model/
@@ -72,19 +74,21 @@ student-app/
 - Java 21
 - JDBC + SQLite 数据库
 - 多线程
-- Socket + Java IO 网络通信 (JSON)
+- Netty 网络通信
 - JavaFX 界面
 - 教师端作为 Host, 无独立服务器
+- Lombok 自动生成 getter, setter
 
 ## 功能概述
 
 ### 教师端
 - controller: UI 控制层
+  - 登录界面  
   - 主界面
   - 创建考试
   - 查看在线学生
   - 实时监控
-  - 阅卷模块
+  - 阅卷模块 
 - view: 界面布局文件
   - FXML
   - CSS
@@ -95,7 +99,7 @@ student-app/
   - 学生信息
   - 学生连接状态
   - 网络通信的消息结构
-- network: 网络通信模块
+- *network: 网络通信模块
   - TeacherServer
     - 开启监听
     - 保存客户列表
@@ -120,15 +124,26 @@ student-app/
   - 日志工具
 
 ### *学生端
-与教师端类似，但不包含数据库，一个Socket单线程，消息协议与教师端一致。
+与教师端类似，但不包含数据库，单线程，消息协议与教师端一致。
 
+- controller
+  - 登录
+  - 主界面
+  - 考试界面
+  - 考试结束界面
+- model
+  - 个人信息
+  - 参加过的考试
+  - 暂存未提交的作答
 - network
   - 连接教师端IP
   - 发送登录信息
   - 接收试题
   - 提交答案
-
-（待细化）
+- service
+  - 监听答题动作
+  - 断线重连
+  - 计时
 
 ## 状态存储设计
 
@@ -142,13 +157,13 @@ student-app/
 
 ### 教师端内存
 - 在线学生列表
-- 每个学生连接的Socket
+- 每个学生连接的情况
 
 ### 学生端本地
 - 当前试题
 - 已作答未提交的答案
 - 学生信息
-- Socket连接状态
+- 连接状态
 
 ## 服务连接
 
@@ -159,7 +174,7 @@ graph TD
 
     JavaFXController["JavaFX Controller"]
     ServiceLayer["Service 层（业务）"]
-    NetworkLayer["network/ (Socket服务)"]
+    NetworkLayer["network"]
     DBLayer["db/dao/ (SQLite)"]
     UtilLayer["util/ (JSON/工具)"]
 
@@ -188,5 +203,18 @@ graph TD
 
 ## *通信协议
  
-（使用JSON, 具体形式待定）
+基于JSON
+
+### 基本结构
+
+``` json
+{
+  "type": "LOGIN_REQ",   // 消息类型（枚举）
+  "requestId": "uuid",   // 请求ID（可选，用于请求-响应对应）
+  "timestamp": 16788888, // 时间戳
+  "payload": { ... }     // 具体的数据内容，根据 type 变化
+}
+```
+
+
 
