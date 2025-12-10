@@ -8,6 +8,7 @@ import java.util.List;
 @Data
 public class QuestionDTO implements Serializable {
     private String id;
+    private String examId;
     private String title;
     private QuestionType type;
     private List<String> options;

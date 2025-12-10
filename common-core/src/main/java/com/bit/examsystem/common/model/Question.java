@@ -7,6 +7,7 @@ import java.util.List;
 @Data
 public class Question implements Serializable {
     private String id;              // 题目ID (UUID)
+    private String examId;
     private String title;           // 题干内容
     private QuestionType type;      // 题目类型 (枚举)
 
