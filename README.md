@@ -70,14 +70,16 @@ student-app/
      └── icons/
 ```
 
-## 技术栈
+## 构建工具
+- IDEA
+- maven
 - Java 21
 - JDBC + SQLite 数据库
 - 多线程
 - Netty 网络通信
 - JavaFX 界面
 - 教师端作为 Host, 无独立服务器
-- Lombok 自动生成 getter, setter
+- Lombok 自动生成 getter, setter等方法
 
 ## 功能概述
 
@@ -210,7 +212,6 @@ graph TD
 ``` json
 {
   "type": "LOGIN_REQ",   // 消息类型（枚举）
-  "requestId": "uuid",   // 请求ID（可选，用于请求-响应对应）
   "timestamp": 16788888, // 时间戳
   "payload": { ... }     // 具体的数据内容，根据 type 变化
 }

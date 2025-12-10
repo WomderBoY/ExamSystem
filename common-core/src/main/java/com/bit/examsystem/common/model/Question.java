@@ -17,6 +17,6 @@ public class Question implements Serializable {
     private Integer score;          // 分值
 
     // --- 敏感字段 ---
-    // 自动阅卷时用。发送给学生端前，务必将此字段 set null !
+    // 自动阅卷时用。发送给学生端使用DTO
     private String correctAnswer;
 }
