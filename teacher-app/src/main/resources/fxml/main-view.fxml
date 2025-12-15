@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.BorderPane?>
+
+<BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-1.0" minWidth="-1.0" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bit.examsystem.teacher.controller.MainController">
+    <top>
+        <MenuBar BorderPane.alignment="CENTER">
+            <menus>
+                <Menu mnemonicParsing="false" text="文件(_F)">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#handleExit" text="退出" />
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="服务器(_S)">
+                    <items>
+                        <MenuItem fx:id="startServerMenuItem" mnemonicParsing="false" onAction="#handleStartServer" text="启动服务" />
+                        <MenuItem fx:id="stopServerMenuItem" mnemonicParsing="false" onAction="#handleStopServer" text="停止服务" />
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="帮助(_H)">
+                    <items>
+                        <MenuItem mnemonicParsing="false" text="关于" />
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+    </top>
+    <center>
+        <TabPane fx:id="mainTabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
+            <tabs>
+                <Tab text="考试管理">
+                    <!-- TODO: 在这里嵌入考试管理的 FXML -->
+                </Tab>
+                <Tab text="学生监控">
+                    <!-- TODO: 在这里嵌入学生监控的 FXML -->
+                </Tab>
+                <Tab text="成绩批改">
+                    <!-- TODO: 在这里嵌入成绩批改的 FXML -->
+                </Tab>
+            </tabs>
+        </TabPane>
+    </center>
+</BorderPane>

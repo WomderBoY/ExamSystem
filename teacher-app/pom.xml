@@ -36,13 +36,13 @@
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-controls</artifactId>
-            <version>${javafx.version}</version>
+            <version>21.0.2</version>
         </dependency>
 
         <dependency>
             <groupId>org.openjfx</groupId>
             <artifactId>javafx-fxml</artifactId>
-            <version>${javafx.version}</version>
+            <version>21.0.2</version>
         </dependency>
 
         <dependency>
@@ -76,7 +76,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.bit.teacher.MainApp</mainClass>
+                    <mainClass>com.bit.examsystem.teacher.TeacherApp</mainClass>
                 </configuration>
             </plugin>
 
