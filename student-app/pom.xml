@@ -73,7 +73,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>com.bit.student.MainApp</mainClass>
+                    <mainClass>com.bit.examsystem.student.StudentApp</mainClass>
                 </configuration>
             </plugin>
         </plugins>
