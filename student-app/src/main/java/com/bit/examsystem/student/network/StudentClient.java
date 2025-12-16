@@ -17,6 +17,7 @@ public class StudentClient {
 
     private volatile boolean isConnecting = false;
     private volatile boolean isShutdown = false;
+    private volatile boolean reconnectionDisabled = false;
     private String host;
     private int port;
 
@@ -55,6 +56,9 @@ public class StudentClient {
             System.err.println("Client has been shut down. Cannot initiate a new connection.");
             return;
         }
+        reconnectionDisabled = false;
+        retryCount.set(0);  // Also reset the retry count for a fresh start.
+
         if (isConnecting || (channel != null && channel.isActive())) {
             System.out.println("Already connected or connecting.");
             return;
@@ -88,7 +92,12 @@ public class StudentClient {
      * 安排重连任务
      */
     public void scheduleReconnect() {
-        if (isShutdown || isConnecting) return; // 如果正在连接，则不安排新的重连
+        if (isShutdown || isConnecting || reconnectionDisabled) {
+            if (reconnectionDisabled) {
+                System.out.println("Reconnection disabled by server logic. Aborting reconnect attempt.");
+            }
+            return;
+        }
 
         if (retryCount.get() < MAX_RETRIES) {
             int delay = 1 << retryCount.getAndIncrement(); // 指数退避策略 (2, 4, 8, ... 秒)
@@ -101,20 +110,22 @@ public class StudentClient {
     }
 
     /**
+     * Called by the business handler to prevent auto-reconnection
+     * after a fatal, non-network-related error (e.g., duplicate login).
+     */
+    public void disableReconnection() { // <-- 4. Add this new public method
+        this.reconnectionDisabled = true;
+    }
+
+    /**
      * 关闭客户端，释放资源
      */
     public void shutdown() {
-        // 1. 立即设置关闭标志，防止任何新的重连/连接任务
         isShutdown = true;
         System.out.println("Shutting down student client...");
-
-        // 2. 如果 channel 仍然活跃，先主动关闭它
-        // 这会触发 channelInactive，但 scheduleReconnect 会因为 isShutdown 标志而直接返回
-        if (channel != null && channel.isActive()) {
+        if (channel != null) {
             channel.close().syncUninterruptibly();
         }
-
-        // 3. 最后，优雅地关闭 EventLoopGroup
         if (group != null) {
             group.shutdownGracefully().syncUninterruptibly();
         }

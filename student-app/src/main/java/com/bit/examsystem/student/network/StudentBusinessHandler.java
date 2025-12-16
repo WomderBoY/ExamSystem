@@ -1,6 +1,11 @@
 package com.bit.examsystem.student.network;
 
-import com.bit.examsystem.common.message.Message;
+import com.bit.examsystem.common.message.LoginResponse;
+import com.bit.examsystem.common.message.Message; // 新增
+import com.bit.examsystem.common.message.MessageType; // 新增
+import com.bit.examsystem.common.model.Student; // 新增
+import com.bit.examsystem.common.util.JsonUtil;
+import com.bit.examsystem.student.service.StudentServiceImpl; // 新增
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
@@ -16,15 +21,48 @@ public class StudentBusinessHandler extends SimpleChannelInboundHandler<Message<
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("Successfully connected to the teacher's server: " + ctx.channel().remoteAddress());
-        // 连接成功后，可以通知 UI 更新状态，并准备发送登录信息
-        // TODO: 调用 Service/Controller 发送登录请求
+        // 从 Service 单例中获取当前学生的信息
+        Student currentStudent = StudentServiceImpl.getInstance().getCurrentStudent();
+
+        if (currentStudent != null) {
+            // 构建登录请求消息并发送
+            Message<Student> loginRequest = new Message<>(MessageType.LOGIN_REQ, currentStudent);
+            ctx.writeAndFlush(loginRequest);
+        } else {
+            System.err.println("Cannot send login info: student data is null. Closing connection.");
+            ctx.close();
+        }
     }
 
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, Message<Object> msg) throws Exception {
-        System.out.println("Received message from server. Type: " + msg.getType());
-        // TODO: 在这里根据 msg.getType() 分发到不同的 Service/Controller 处理
-        // 例如，收到 EXAM_START 消息后，将试卷数据显示在UI上
+        switch (msg.getType()) {
+            case LOGIN_RESP:
+                handleLoginResponse(ctx, msg);
+                break;
+
+            // Handle other message types like EXAM_START later
+            default:
+                System.out.println("Received unhandled message type: " + msg.getType());
+                break;
+        }
+    }
+
+    private void handleLoginResponse(ChannelHandlerContext ctx, Message<Object> msg) {
+        // Convert the body (LinkedHashMap) to our LoginResponse DTO
+        LoginResponse response = JsonUtil.convert(msg.getBody(), LoginResponse.class);
+
+        if (response.isSuccess()) {
+            System.out.println("[Login Success] Server response: " + response.getMessage());
+            // TODO: In the next step, we will trigger UI navigation here.
+            // For example: UIManager.showWaitingLobby();
+        } else {
+            System.err.println("[Login Failed] Server response: " + response.getMessage());
+            // TODO: In the next step, we will show an alert dialog here.
+            // For example: AlertUtil.showError("Login Failed", response.getMessage());
+
+            client.disableReconnection();
+        }
     }
 
     @Override

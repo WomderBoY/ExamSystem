@@ -9,8 +9,14 @@ public class StudentServiceImpl implements StudentService {
     private Student currentStudent;
     private final StudentClient studentClient;
 
+    // --- Singleton Pattern ---
+    private static StudentServiceImpl INSTANCE;
     public StudentServiceImpl(StudentClient studentClient) {
         this.studentClient = studentClient;
+        INSTANCE = this; // 在构造时赋值
+    }
+    public static StudentServiceImpl getInstance() {
+        return INSTANCE;
     }
 
     @Override
