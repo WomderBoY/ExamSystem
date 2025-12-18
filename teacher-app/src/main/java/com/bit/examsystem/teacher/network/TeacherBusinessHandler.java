@@ -4,11 +4,14 @@ import com.bit.examsystem.common.message.LoginResponse;
 import com.bit.examsystem.common.message.Message;
 import com.bit.examsystem.common.message.MessageType;
 import com.bit.examsystem.common.model.Student;
+import com.bit.examsystem.common.network.ProtocolInitializer;
 import com.bit.examsystem.common.util.JsonUtil;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.ChannelFutureListener;
+import io.netty.handler.timeout.IdleState; // <-- 1. Import
+import io.netty.handler.timeout.IdleStateEvent; // <-- 2. Import
 
 @ChannelHandler.Sharable
 public class TeacherBusinessHandler extends SimpleChannelInboundHandler<Message<Object>> {
@@ -35,6 +38,11 @@ public class TeacherBusinessHandler extends SimpleChannelInboundHandler<Message<
                 handleLoginRequest(ctx, msg);
                 break;
 
+            case HEARTBEAT:
+                // resets the IdleStateHandler's reader timer.
+                // System.out.println("Received heartbeat from: " + ctx.channel().remoteAddress());
+                break;
+
             // TODO: 在后续步骤中处理其他消息类型，如 ANSWER_SUBMIT
             // case ANSWER_SUBMIT:
             //     handleAnswerSubmit(ctx, msg);
@@ -43,6 +51,24 @@ public class TeacherBusinessHandler extends SimpleChannelInboundHandler<Message<
             default:
                 System.out.println("Received unhandled message type: " + msg.getType());
                 break;
+        }
+    }
+
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        int readerIdle = ProtocolInitializer.READER_IDLE_SECONDS;
+
+        if (evt instanceof IdleStateEvent) {
+            IdleStateEvent e = (IdleStateEvent) evt;
+            // 4. Check if it's a "reader idle" event.
+            if (e.state() == IdleState.READER_IDLE) {
+                // No data has been received from the client for a while.
+                // We assume the client is dead and close the connection.
+                System.err.println("Reader idle for " + readerIdle + "s. Closing connection to " + ctx.channel().remoteAddress());
+                ctx.close(); // Closing the channel will trigger channelInactive and remove the student.
+            }
+        } else {
+            super.userEventTriggered(ctx, evt);
         }
     }
 

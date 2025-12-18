@@ -4,11 +4,14 @@ import com.bit.examsystem.common.message.LoginResponse;
 import com.bit.examsystem.common.message.Message; // 新增
 import com.bit.examsystem.common.message.MessageType; // 新增
 import com.bit.examsystem.common.model.Student; // 新增
+import com.bit.examsystem.common.network.ProtocolInitializer;
 import com.bit.examsystem.common.util.JsonUtil;
 import com.bit.examsystem.student.service.StudentServiceImpl; // 新增
 import com.bit.examsystem.student.util.ViewManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import io.netty.handler.timeout.IdleState; // <-- 1. Import
+import io.netty.handler.timeout.IdleStateEvent; // <-- 2. Import
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
 
@@ -19,6 +22,28 @@ public class StudentBusinessHandler extends SimpleChannelInboundHandler<Message<
     // 传入 StudentClient 的引用，以便在断线时调用其重连方法
     public StudentBusinessHandler(StudentClient client) {
         this.client = client;
+    }
+
+    /**
+     * This method is called when a special event (like an idle event) occurs in the pipeline.
+     */
+    @Override
+    public void userEventTriggered(ChannelHandlerContext ctx, Object evt) throws Exception {
+        int writerIdle = ProtocolInitializer.WRITER_IDLE_SECONDS;
+
+        if (evt instanceof IdleStateEvent) {
+            IdleStateEvent e = (IdleStateEvent) evt;
+            // 3. Check if it's a "writer idle" event.
+            if (e.state() == IdleState.WRITER_IDLE) {
+                // The connection has been idle for writing, so we send a heartbeat.
+                System.out.println("Writer idle for " + writerIdle + "s. Sending heartbeat to server.");
+                Message<String> heartbeatMsg = new Message<>(MessageType.HEARTBEAT, "ping");
+                ctx.writeAndFlush(heartbeatMsg);
+            }
+        } else {
+            // Pass other events down the pipeline.
+            super.userEventTriggered(ctx, evt);
+        }
     }
 
     @Override
