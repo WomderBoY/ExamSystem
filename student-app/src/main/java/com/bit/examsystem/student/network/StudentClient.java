@@ -22,7 +22,7 @@ public class StudentClient {
     private int port;
 
     private final AtomicInteger retryCount = new AtomicInteger(0);
-    private static final int MAX_RETRIES = 10; // 最大重连次数
+    private static final int MAX_RETRIES = 5; // 最大重连次数
 
     // --- Singleton Pattern ---
     private static class SingletonHolder {

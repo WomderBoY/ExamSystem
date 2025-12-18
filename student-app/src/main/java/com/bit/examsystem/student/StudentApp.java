@@ -1,11 +1,13 @@
 package com.bit.examsystem.student;
 
 import com.bit.examsystem.student.controller.LoginController;
+import com.bit.examsystem.student.controller.WaitingController;
 import com.bit.examsystem.student.network.StudentClient;
 import com.bit.examsystem.student.service.ConfigService;
 import com.bit.examsystem.student.service.ConfigServiceImpl;
 import com.bit.examsystem.student.service.StudentService;
 import com.bit.examsystem.student.service.StudentServiceImpl;
+import com.bit.examsystem.student.util.ViewManager;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
@@ -27,14 +29,15 @@ public class StudentApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/login-view.fxml"));
+        // 初始化 ViewManager，保存 Stage 和 Controller 工厂
+        ViewManager.init(primaryStage, param -> {
+            if (param == LoginController.class) return new LoginController(studentService, configService);
+            if (param == WaitingController.class) return new WaitingController(studentService);
+            return null;
+        });
 
-        // 依赖注入
-        loader.setControllerFactory(param -> new LoginController(studentService, configService));
-
-        Scene scene = new Scene(loader.load());
-        primaryStage.setTitle("线上考试系统 - 学生端登录");
-        primaryStage.setScene(scene);
+        // 默认展示登录界面
+        ViewManager.switchScene("/fxml/login-view.fxml", "线上考试系统 - 学生端登录");
         primaryStage.show();
     }
 

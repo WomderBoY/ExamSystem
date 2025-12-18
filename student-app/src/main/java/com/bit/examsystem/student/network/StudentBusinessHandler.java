@@ -6,8 +6,11 @@ import com.bit.examsystem.common.message.MessageType; // 新增
 import com.bit.examsystem.common.model.Student; // 新增
 import com.bit.examsystem.common.util.JsonUtil;
 import com.bit.examsystem.student.service.StudentServiceImpl; // 新增
+import com.bit.examsystem.student.util.ViewManager;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
 
 public class StudentBusinessHandler extends SimpleChannelInboundHandler<Message<Object>> {
 
@@ -49,19 +52,27 @@ public class StudentBusinessHandler extends SimpleChannelInboundHandler<Message<
     }
 
     private void handleLoginResponse(ChannelHandlerContext ctx, Message<Object> msg) {
-        // Convert the body (LinkedHashMap) to our LoginResponse DTO
         LoginResponse response = JsonUtil.convert(msg.getBody(), LoginResponse.class);
 
         if (response.isSuccess()) {
-            System.out.println("[Login Success] Server response: " + response.getMessage());
-            // TODO: In the next step, we will trigger UI navigation here.
-            // For example: UIManager.showWaitingLobby();
+            // UI操作，必须在JavaFX线程执行
+            Platform.runLater(() -> {
+                System.out.println("[Login Success] 跳转至等待大厅");
+                ViewManager.switchScene("/fxml/waiting-view.fxml", "考试系统 - 等待大厅");
+            });
         } else {
-            System.err.println("[Login Failed] Server response: " + response.getMessage());
-            // TODO: In the next step, we will show an alert dialog here.
-            // For example: AlertUtil.showError("Login Failed", response.getMessage());
-
+            // 1. 立即在当前（Netty I/O）线程中禁用重连，这是关键！
             client.disableReconnection();
+
+            // 2. 将UI操作排队到JavaFX线程执行
+            Platform.runLater(() -> {
+                System.err.println("[Login Failed] 弹出警告");
+                Alert alert = new Alert(Alert.AlertType.ERROR);
+                alert.setTitle("登录失败");
+                alert.setHeaderText(null);
+                alert.setContentText("无法登录系统: " + response.getMessage());
+                alert.showAndWait();
+            });
         }
     }
 
