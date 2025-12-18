@@ -1,12 +1,15 @@
 package com.bit.examsystem.teacher.network;
 
 import com.bit.examsystem.common.model.Student;
+import com.bit.examsystem.teacher.network.listener.OnlineStudentListener;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelId;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * 单例的客户端连接管理器
@@ -31,6 +34,10 @@ public class ClientConnectionManager {
     }
     // -------------------------
 
+    // Use CopyOnWriteArrayList for thread-safe listener management.
+    // It's efficient when reads/iterations are far more frequent than writes (add/remove).
+    private final List<OnlineStudentListener> listeners = new CopyOnWriteArrayList<>();
+
     /**
      * 当学生成功登录后，将其添加到管理器中
      * @param channel 学生的 Netty Channel
@@ -43,6 +50,7 @@ public class ClientConnectionManager {
         onlineStudents.put(channel.id(), student);
         System.out.printf("[ConnectionManager] Student logged in: %s (%s) from %s. Total online: %d%n",
                 student.getName(), student.getId(), student.getIp(), onlineStudents.size());
+        notifyListeners();
     }
 
     /**
@@ -55,8 +63,23 @@ public class ClientConnectionManager {
         if (removedStudent != null) {
             System.out.printf("[ConnectionManager] Student disconnected: %s (%s). Total online: %d%n",
                     removedStudent.getName(), removedStudent.getId(), onlineStudents.size());
+            notifyListeners();
         }
         return removedStudent;
+    }
+
+    public void addListener(OnlineStudentListener listener) {
+        listeners.add(listener);
+    }
+
+    public void removeListener(OnlineStudentListener listener) {
+        listeners.remove(listener);
+    }
+
+    private void notifyListeners() {
+        for (OnlineStudentListener listener : listeners) {
+            listener.onStudentListChanged();
+        }
     }
 
     /**
