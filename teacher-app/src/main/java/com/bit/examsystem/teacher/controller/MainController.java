@@ -4,14 +4,21 @@ import com.bit.examsystem.common.model.Student;
 import com.bit.examsystem.teacher.network.ClientConnectionManager;
 import com.bit.examsystem.teacher.network.listener.OnlineStudentListener;
 import com.bit.examsystem.teacher.service.ExamService;
+import com.bit.examsystem.teacher.service.ExamManagementService;
+import com.bit.examsystem.teacher.service.ExamManagementServiceImpl;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.Scene;
+import javafx.stage.Modality;
+import javafx.stage.Stage;
+import java.io.IOException;
 import java.util.Collection;
 
 public class MainController implements OnlineStudentListener{
@@ -99,5 +106,26 @@ public class MainController implements OnlineStudentListener{
         examService.stopServer();
         // 正常退出应用
         Platform.exit();
+    }
+
+    @FXML
+    void handleManageExams(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/exam-management-view.fxml"));
+
+            // The controller needs the service, so we use a factory
+            ExamManagementService examMgmtService = new ExamManagementServiceImpl();
+            loader.setControllerFactory(param -> new ExamManagementController(examMgmtService));
+
+            Stage dialogStage = new Stage();
+            dialogStage.setTitle("试卷管理");
+            dialogStage.initModality(Modality.WINDOW_MODAL);
+            dialogStage.initOwner(studentsTableView.getScene().getWindow()); // Set owner
+            dialogStage.setScene(new Scene(loader.load()));
+
+            dialogStage.showAndWait();
+        } catch (IOException e) {
+            e.printStackTrace(); // Show alert
+        }
     }
 }

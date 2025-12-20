@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane hgap="10" vgap="10" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bit.examsystem.teacher.controller.QuestionEditorController">
+    <padding><Insets top="20" right="20" bottom="20" left="20" /></padding>
+    <columnConstraints>
+        <ColumnConstraints prefWidth="100" />
+        <ColumnConstraints hgrow="ALWAYS" />
+    </columnConstraints>
+
+    <Label text="题目类型:" GridPane.rowIndex="0" />
+    <ComboBox fx:id="typeComboBox" prefWidth="200" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+    <Label text="题干:" GridPane.rowIndex="1" />
+    <TextArea fx:id="titleTextArea" prefHeight="100" wrapText="true" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+    <Label fx:id="optionsLabel" text="选项 (每行一个):" GridPane.rowIndex="2" />
+    <TextArea fx:id="optionsTextArea" prefHeight="120" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+    <Label text="正确答案:" GridPane.rowIndex="3" />
+    <TextField fx:id="answerField" GridPane.columnIndex="1" GridPane.rowIndex="3" />
+
+    <Label text="分值:" GridPane.rowIndex="4" />
+    <TextField fx:id="scoreField" GridPane.columnIndex="1" GridPane.rowIndex="4" />
+
+    <HBox spacing="10" alignment="CENTER_RIGHT" GridPane.columnSpan="2" GridPane.rowIndex="5">
+        <Button text="保存" onAction="#handleSave" defaultButton="true" />
+        <Button text="取消" onAction="#handleCancel" cancelButton="true" />
+    </HBox>
+</GridPane>

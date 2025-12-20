@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bit.examsystem.teacher.controller.ExamManagementController">
+    <left>
+        <VBox spacing="5" prefWidth="200">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <Label text="考试列表" style="-fx-font-weight: bold;"/>
+            <ListView fx:id="examListView" VBox.vgrow="ALWAYS"/>
+            <HBox spacing="5">
+                <Button text="新建考试" onAction="#handleNewExam"/>
+                <Button text="删除考试" onAction="#handleDeleteExam"/>
+            </HBox>
+        </VBox>
+    </left>
+    <center>
+        <VBox spacing="5">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <GridPane hgap="10" vgap="5">
+                <Label text="考试标题:" GridPane.rowIndex="0" />
+                <TextField fx:id="titleField" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+                <Label text="考试时长(分钟):" GridPane.rowIndex="1" />
+                <TextField fx:id="durationField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+                <!-- Start Time can be a more complex picker, using TextField for now -->
+                <Label text="开始时间戳:" GridPane.rowIndex="2" />
+                <TextField fx:id="startTimeField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+            </GridPane>
+
+            <Separator/>
+
+            <Label text="题目列表" style="-fx-font-weight: bold;"/>
+            <TableView fx:id="questionsTableView" VBox.vgrow="ALWAYS">
+                <columns>
+                    <TableColumn fx:id="questionTitleColumn" text="题干" prefWidth="300"/>
+                    <TableColumn fx:id="questionTypeColumn" text="类型" prefWidth="100"/>
+                    <TableColumn fx:id="questionScoreColumn" text="分值" prefWidth="50"/>
+                </columns>
+                <columnResizePolicy><TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/></columnResizePolicy>
+            </TableView>
+            <HBox spacing="5">
+                <Button text="添加题目" onAction="#handleAddQuestion"/>
+                <Button text="编辑题目" onAction="#handleEditQuestion"/>
+                <Button text="删除题目" onAction="#handleDeleteQuestion"/>
+            </HBox>
+        </VBox>
+    </center>
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="10">
+            <padding><Insets top="10" right="10" bottom="10" left="10"/></padding>
+            <Button text="保存试卷" onAction="#handleSaveExam" style="-fx-font-weight: bold;"/>
+            <Button text="关闭" onAction="#handleClose"/>
+        </HBox>
+    </bottom>
+</BorderPane>

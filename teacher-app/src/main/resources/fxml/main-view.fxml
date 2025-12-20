@@ -24,6 +24,11 @@
                         <MenuItem fx:id="stopServerMenuItem" mnemonicParsing="false" onAction="#handleStopServer" text="停止服务" />
                     </items>
                 </Menu>
+                <Menu mnemonicParsing="false" text="考试(_E)">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#handleManageExams" text="试卷管理..." />
+                    </items>
+                </Menu>
                 <Menu mnemonicParsing="false" text="帮助(_H)">
                     <items>
                         <MenuItem mnemonicParsing="false" text="关于" />
