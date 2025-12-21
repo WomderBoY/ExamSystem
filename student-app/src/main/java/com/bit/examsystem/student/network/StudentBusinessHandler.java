@@ -1,5 +1,9 @@
 package com.bit.examsystem.student.network;
 
+import com.bit.examsystem.common.dto.ExamPaperDTO;
+import com.bit.examsystem.common.dto.QuestionDTO;
+import com.bit.examsystem.common.model.QuestionType;
+
 import com.bit.examsystem.common.message.LoginResponse;
 import com.bit.examsystem.common.message.Message; // 新增
 import com.bit.examsystem.common.message.MessageType; // 新增
@@ -8,12 +12,19 @@ import com.bit.examsystem.common.network.ProtocolInitializer;
 import com.bit.examsystem.common.util.JsonUtil;
 import com.bit.examsystem.student.service.StudentServiceImpl; // 新增
 import com.bit.examsystem.student.util.ViewManager;
+import com.fasterxml.jackson.core.type.TypeReference;
+
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.timeout.IdleState; // <-- 1. Import
 import io.netty.handler.timeout.IdleStateEvent; // <-- 2. Import
 import javafx.application.Platform;
 import javafx.scene.control.Alert;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class StudentBusinessHandler extends SimpleChannelInboundHandler<Message<Object>> {
 
@@ -68,7 +79,9 @@ public class StudentBusinessHandler extends SimpleChannelInboundHandler<Message<
             case LOGIN_RESP:
                 handleLoginResponse(ctx, msg);
                 break;
-
+            case EXAM_START: // <-- Add this case
+                handleExamStart(ctx, msg);
+                break;
             // Handle other message types like EXAM_START later
             default:
                 System.out.println("Received unhandled message type: " + msg.getType());
@@ -99,6 +112,33 @@ public class StudentBusinessHandler extends SimpleChannelInboundHandler<Message<
                 alert.showAndWait();
             });
         }
+    }
+
+    private void handleExamStart(ChannelHandlerContext ctx, Message<Object> msg) {
+        ExamPaperDTO exam = JsonUtil.convert(msg.getBody(), new TypeReference<>() {});
+
+        // --- Proactive Data Cleaning ---
+        if (exam != null && exam.getQuestions() != null) {
+            for (QuestionDTO question : exam.getQuestions()) {
+                // Ensure the options list is never null.
+                if (question.getOptions() == null) {
+                    if (question.getType() == QuestionType.JUDGE) {
+                        question.setOptions(new ArrayList<>(Arrays.asList("T", "F")));
+                    } else {
+                        question.setOptions(new ArrayList<>()); // 保证不是 null
+                    }
+//                    question.setOptions(new ArrayList<>());
+                }
+            }
+        }
+
+        // Save the exam paper in the service
+        StudentServiceImpl.getInstance().setCurrentExam(exam);
+
+        // Switch to the exam view on the JavaFX thread
+        Platform.runLater(() -> {
+            ViewManager.switchScene("/fxml/exam-view.fxml", "考试进行中 - " + exam.getTitle());
+        });
     }
 
     @Override

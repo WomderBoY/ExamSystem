@@ -6,6 +6,7 @@ import com.bit.examsystem.common.message.MessageType;
 import com.bit.examsystem.common.model.Student;
 import com.bit.examsystem.common.network.ProtocolInitializer;
 import com.bit.examsystem.common.util.JsonUtil;
+import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
@@ -18,10 +19,16 @@ public class TeacherBusinessHandler extends SimpleChannelInboundHandler<Message<
 
     private final ClientConnectionManager connectionManager = ClientConnectionManager.getInstance();
 
+    private final ChannelGroup studentChannels;
+
+    public TeacherBusinessHandler(ChannelGroup studentChannels) {
+        this.studentChannels = studentChannels;
+    }
+
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("A client connected: " + ctx.channel().remoteAddress() + ". Waiting for login info...");
-        // 此阶段不做任何操作，等待客户端发送 LOGIN_REQ 消息
+        studentChannels.add(ctx.channel());
     }
 
     @Override

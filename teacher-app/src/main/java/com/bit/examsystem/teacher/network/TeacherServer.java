@@ -1,6 +1,7 @@
 package com.bit.examsystem.teacher.network;
 
 import com.bit.examsystem.common.network.ProtocolInitializer;
+import com.bit.examsystem.common.message.Message;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.*;
 import io.netty.channel.group.ChannelGroup;
@@ -19,7 +20,7 @@ public class TeacherServer {
 
     // 用于管理所有已连接的学生客户端 Channel
     private final ChannelGroup studentChannels = new DefaultChannelGroup(GlobalEventExecutor.INSTANCE);
-    private final TeacherBusinessHandler teacherBusinessHandler = new TeacherBusinessHandler(/* studentChannels */); // 实例化业务处理器
+    private final TeacherBusinessHandler teacherBusinessHandler = new TeacherBusinessHandler(studentChannels); // 实例化业务处理器
 
     // --- Singleton Pattern ---
     private static class SingletonHolder {
@@ -132,8 +133,18 @@ public class TeacherServer {
         System.out.println("Main thread finished. Server is running in the background.");
     }
 
-    // TODO: Add methods to interact with studentChannels, e.g., broadcast messages
-    // public void broadcastMessage(Message<?> message) {
-    //     studentChannels.writeAndFlush(message);
-    // }
+    /**
+     * Sends a message to all currently connected and active student channels.
+     * @param message The message to broadcast.
+     */
+    public void broadcastMessage(Message<?> message) {
+        if (studentChannels.isEmpty()) {
+            System.out.println("No students online to broadcast message to.");
+            return;
+        }
+
+        // ChannelGroup's writeAndFlush will send the message to every channel in the group.
+        studentChannels.writeAndFlush(message);
+        System.out.println("Message broadcasted to " + studentChannels.size() + " students.");
+    }
 }

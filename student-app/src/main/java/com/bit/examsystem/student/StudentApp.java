@@ -2,6 +2,7 @@ package com.bit.examsystem.student;
 
 import com.bit.examsystem.student.controller.LoginController;
 import com.bit.examsystem.student.controller.WaitingController;
+import com.bit.examsystem.student.controller.ExamController;
 import com.bit.examsystem.student.network.StudentClient;
 import com.bit.examsystem.student.service.ConfigService;
 import com.bit.examsystem.student.service.ConfigServiceImpl;
@@ -33,6 +34,8 @@ public class StudentApp extends Application {
         ViewManager.init(primaryStage, param -> {
             if (param == LoginController.class) return new LoginController(studentService, configService);
             if (param == WaitingController.class) return new WaitingController(studentService);
+            if (param == ExamController.class) return new ExamController(studentService);
+
             return null;
         });
 

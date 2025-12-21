@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.text.*?>
+
+<BorderPane xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bit.examsystem.student.controller.ExamController">
+    <top>
+        <VBox alignment="CENTER" spacing="5" style="-fx-background-color: #f4f4f4; -fx-padding: 10;">
+            <Label fx:id="examTitleLabel" text="考试标题加载中...">
+                <font><Font name="System Bold" size="20.0" /></font>
+            </Label>
+            <HBox alignment="CENTER" spacing="20">
+                <Label fx:id="studentInfoLabel" text="考生: --" />
+                <Label fx:id="timerLabel" text="剩余时间: --:--" style="-fx-font-weight: bold; -fx-text-fill: red;">
+                    <font><Font size="16.0" /></font>
+                </Label>
+            </HBox>
+        </VBox>
+    </top>
+    <center>
+        <ScrollPane fitToWidth="true" style="-fx-padding: 10;">
+            <VBox fx:id="questionsContainer" spacing="20" />
+        </ScrollPane>
+    </center>
+    <bottom>
+        <HBox alignment="CENTER" style="-fx-padding: 15;">
+            <Button onAction="#handleSubmit" text="提交答案" prefHeight="40.0" prefWidth="150.0" style="-fx-font-size: 16px; -fx-background-color: #007bff; -fx-text-fill: white;" />
+        </HBox>
+    </bottom>
+</BorderPane>
