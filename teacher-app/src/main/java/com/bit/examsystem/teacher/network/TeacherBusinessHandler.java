@@ -4,8 +4,11 @@ import com.bit.examsystem.common.message.LoginResponse;
 import com.bit.examsystem.common.message.Message;
 import com.bit.examsystem.common.message.MessageType;
 import com.bit.examsystem.common.model.Student;
+import com.bit.examsystem.common.model.StudentAnswer;
 import com.bit.examsystem.common.network.ProtocolInitializer;
 import com.bit.examsystem.common.util.JsonUtil;
+import com.bit.examsystem.teacher.service.SubmissionService;
+import com.bit.examsystem.teacher.service.SubmissionServiceImpl;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -14,12 +17,17 @@ import io.netty.channel.ChannelFutureListener;
 import io.netty.handler.timeout.IdleState; // <-- 1. Import
 import io.netty.handler.timeout.IdleStateEvent; // <-- 2. Import
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import java.util.List;
+
 @ChannelHandler.Sharable
 public class TeacherBusinessHandler extends SimpleChannelInboundHandler<Message<Object>> {
 
     private final ClientConnectionManager connectionManager = ClientConnectionManager.getInstance();
 
     private final ChannelGroup studentChannels;
+
+    private final SubmissionService submissionService = SubmissionServiceImpl.getInstance();
 
     public TeacherBusinessHandler(ChannelGroup studentChannels) {
         this.studentChannels = studentChannels;
@@ -50,10 +58,9 @@ public class TeacherBusinessHandler extends SimpleChannelInboundHandler<Message<
                 // System.out.println("Received heartbeat from: " + ctx.channel().remoteAddress());
                 break;
 
-            // TODO: 在后续步骤中处理其他消息类型，如 ANSWER_SUBMIT
-            // case ANSWER_SUBMIT:
-            //     handleAnswerSubmit(ctx, msg);
-            //     break;
+            case ANSWER_SUBMIT:
+                handleAnswerSubmit(ctx, msg);
+                break;
 
             default:
                 System.out.println("Received unhandled message type: " + msg.getType());
@@ -111,6 +118,27 @@ public class TeacherBusinessHandler extends SimpleChannelInboundHandler<Message<
             LoginResponse payload = new LoginResponse(false, "Server internal error during login.");
             Message<LoginResponse> response = new Message<>(MessageType.LOGIN_RESP, payload);
             ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+        }
+    }
+
+    private void handleAnswerSubmit(ChannelHandlerContext ctx, Message<Object> msg) {
+        // 1. Get the student who sent this message.
+        Student student = connectionManager.getStudent(ctx.channel().id());
+        if (student == null) {
+            System.err.println("Received submission from an unknown/unregistered channel. Ignoring.");
+            return;
+        }
+
+        // 2. Deserialize the list of answers.
+        try {
+            List<StudentAnswer> answers = JsonUtil.convert(msg.getBody(), new TypeReference<>() {});
+
+            // 3. Pass to the submission service for processing.
+            submissionService.processSubmission(student.getId(), answers);
+
+        } catch (Exception e) {
+            System.err.println("Failed to parse submission from student " + student.getId());
+            e.printStackTrace();
         }
     }
 

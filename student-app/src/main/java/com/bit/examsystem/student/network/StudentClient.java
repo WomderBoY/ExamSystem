@@ -1,5 +1,6 @@
 package com.bit.examsystem.student.network;
 
+import com.bit.examsystem.common.message.Message;
 import com.bit.examsystem.common.network.ProtocolInitializer;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
@@ -146,12 +147,16 @@ public class StudentClient {
         // 为了测试，我们可以让主线程等待，或者观察后台线程的输出
     }
 
-    // TODO: 提供发送消息的方法
-    // public void sendMessage(Message<?> message) {
-    //     if (channel != null && channel.isActive()) {
-    //         channel.writeAndFlush(message);
-    //     } else {
-    //         System.err.println("Connection is not active. Cannot send message.");
-    //     }
-    // }
+    /**
+     * Sends a message to the server if the connection is active.
+     * @param message The message to send.
+     */
+    public void sendMessage(Message<?> message) {
+        if (channel != null && channel.isActive()) {
+            channel.writeAndFlush(message);
+        } else {
+            System.err.println("Connection is not active. Cannot send message.");
+            // In a real application, you might queue this message or show an error.
+        }
+    }
 }

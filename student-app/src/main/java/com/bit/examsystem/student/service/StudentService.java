@@ -41,4 +41,8 @@ public interface StudentService {
      */
     void clearAnswers();
 
+    /**
+     * Submits all cached answers to the server.
+     */
+    void submitAnswers();
 }

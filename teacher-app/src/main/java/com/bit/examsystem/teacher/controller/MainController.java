@@ -7,6 +7,8 @@ import com.bit.examsystem.teacher.network.listener.OnlineStudentListener;
 import com.bit.examsystem.teacher.service.ExamService;
 import com.bit.examsystem.teacher.service.ExamManagementService;
 import com.bit.examsystem.teacher.service.ExamManagementServiceImpl;
+import com.bit.examsystem.teacher.service.SubmissionService;
+import com.bit.examsystem.teacher.service.SubmissionServiceImpl;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -223,6 +225,8 @@ public class MainController implements OnlineStudentListener{
                 System.err.println("UI: Cannot start a new exam while one is in progress.");
                 return;
             }
+
+            SubmissionServiceImpl.getInstance().clearSubmissions(); // Clear old data
             // Call the service to start the exam broadcast.
             examService.startExam(fullExam);
 

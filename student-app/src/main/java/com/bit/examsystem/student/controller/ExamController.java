@@ -24,6 +24,7 @@ public class ExamController {
     @FXML private Label studentInfoLabel;
     @FXML private Label timerLabel;
     @FXML private VBox questionsContainer;
+    @FXML private Button submitButton;
 
     private final StudentService studentService;
 
@@ -48,7 +49,10 @@ public class ExamController {
                 // This is the "onTick" consumer, called every second
                 timeLeft -> Platform.runLater(() -> timerLabel.setText(timeLeft)),
                 // This is the "onFinish" runnable, called when the timer hits zero
-                () -> Platform.runLater(this::handleSubmit)
+                () -> Platform.runLater(() -> {
+                    System.out.println("Time is up! Auto-submitting...");
+                    handleSubmit();
+                })
         );
 
         // Dynamically build the UI for each question
@@ -170,8 +174,12 @@ public class ExamController {
         List<StudentAnswer> answers = studentService.getAllAnswers();
         System.out.println("Submitting answers: " + answers);
 
+        // Prevent double submission
+        submitButton.setDisable(true);
         studentService.stopExamTimer();
-        // TODO: Send answers to server
+        // Call the service method to send the answers
+        studentService.submitAnswers();
+
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("提交成功");
         alert.setHeaderText("答案已收集，准备提交！");

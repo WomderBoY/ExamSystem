@@ -1,6 +1,8 @@
 package com.bit.examsystem.student.service;
 
 import com.bit.examsystem.common.model.Student;
+import com.bit.examsystem.common.message.Message;
+import com.bit.examsystem.common.message.MessageType;
 import com.bit.examsystem.common.dto.ExamPaperDTO;
 import com.bit.examsystem.student.network.StudentClient;
 import com.bit.examsystem.common.model.StudentAnswer;
@@ -135,5 +137,18 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public void clearAnswers() {
         answerCache.clear();
+    }
+
+    @Override
+    public void submitAnswers() {
+        // 1. Get all answers from the local cache.
+        List<StudentAnswer> answers = getAllAnswers();
+
+        // 2. Create the network message with the answers as the payload.
+        Message<List<StudentAnswer>> submissionMessage = new Message<>(MessageType.ANSWER_SUBMIT, answers);
+
+        // 3. Use the network client to send the message.
+        System.out.println("Service: Sending " + answers.size() + " answers to the server.");
+        studentClient.sendMessage(submissionMessage);
     }
 }
