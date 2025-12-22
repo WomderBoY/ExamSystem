@@ -3,7 +3,11 @@ package com.bit.examsystem.student.service;
 import com.bit.examsystem.common.model.Student;
 import com.bit.examsystem.common.dto.ExamPaperDTO;
 import com.bit.examsystem.student.network.StudentClient;
-
+import com.bit.examsystem.common.model.StudentAnswer;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Timer; // Use java.util.Timer
 import java.util.TimerTask;
 import java.util.function.Consumer;
@@ -16,6 +20,9 @@ public class StudentServiceImpl implements StudentService {
     private ExamPaperDTO currentExam;
     private Timer examTimer;
     private long endTime;
+
+    // Key: questionId, Value: The student's answer string.
+    private final Map<String, String> answerCache = new ConcurrentHashMap<>();
 
     // --- Singleton Pattern ---
     private static StudentServiceImpl INSTANCE;
@@ -59,6 +66,7 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public void setCurrentExam(ExamPaperDTO exam) {
+        clearAnswers();
         this.currentExam = exam;
         // Calculate the end time based on the duration
         this.endTime = System.currentTimeMillis() + (long) exam.getDurationMinutes() * 60 * 1000;
@@ -97,5 +105,35 @@ public class StudentServiceImpl implements StudentService {
             examTimer.cancel();
             examTimer = null;
         }
+    }
+
+    @Override
+    public void updateAnswer(String questionId, String answer) {
+        if (questionId == null) return;
+
+        if (answer == null || answer.trim().isEmpty()) {
+            answerCache.remove(questionId);
+        } else {
+            answerCache.put(questionId, answer);
+        }
+        // For debugging, print the current state of the cache.
+        System.out.println("Answer cache updated: " + answerCache);
+    }
+
+    @Override
+    public List<StudentAnswer> getAllAnswers() {
+        List<StudentAnswer> answerList = new ArrayList<>();
+        for (Map.Entry<String, String> entry : answerCache.entrySet()) {
+            StudentAnswer sa = new StudentAnswer();
+            sa.setQuestionId(entry.getKey());
+            sa.setAnswer(entry.getValue());
+            answerList.add(sa);
+        }
+        return answerList;
+    }
+
+    @Override
+    public void clearAnswers() {
+        answerCache.clear();
     }
 }

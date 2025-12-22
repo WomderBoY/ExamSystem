@@ -2,6 +2,9 @@ package com.bit.examsystem.student.service;
 
 import com.bit.examsystem.common.model.Student;
 import com.bit.examsystem.common.dto.ExamPaperDTO;
+import com.bit.examsystem.common.model.StudentAnswer;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public interface StudentService {
@@ -19,4 +22,23 @@ public interface StudentService {
 
     void startExamTimer(Consumer<String> onTick, Runnable onFinish);
     void stopExamTimer();
+
+    /**
+     * Updates or adds an answer for a specific question to the in-memory cache.
+     * @param questionId The ID of the question.
+     * @param answer The student's answer.
+     */
+    void updateAnswer(String questionId, String answer);
+
+    /**
+     * Retrieves all cached answers.
+     * @return A list of all student answers.
+     */
+    List<StudentAnswer> getAllAnswers();
+
+    /**
+     * Clears all cached answers. Called when a new exam starts.
+     */
+    void clearAnswers();
+
 }

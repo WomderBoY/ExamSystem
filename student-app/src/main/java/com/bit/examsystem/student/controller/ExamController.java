@@ -3,6 +3,7 @@ package com.bit.examsystem.student.controller;
 import com.bit.examsystem.common.dto.ExamPaperDTO;
 import com.bit.examsystem.common.dto.QuestionDTO;
 import com.bit.examsystem.common.model.QuestionType;
+import com.bit.examsystem.common.model.StudentAnswer;
 import com.bit.examsystem.student.service.StudentService;
 import javafx.application.Platform;
 import javafx.fxml.FXML;
@@ -13,7 +14,10 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class ExamController {
     @FXML private Label examTitleLabel;
@@ -77,6 +81,7 @@ public class ExamController {
     }
 
     private Node createAnswerNode(QuestionDTO question) {
+        Node answerNode = null;
         QuestionType type = question.getType();
         List<String> options = question.getOptions(); // Get the options list
 
@@ -104,7 +109,15 @@ public class ExamController {
                     optionsBox.getChildren().add(rb);
                 }
             }
-            return optionsBox;
+            toggleGroup.selectedToggleProperty().addListener((obs, oldToggle, newToggle) -> {
+                if (newToggle != null) {
+                    RadioButton selectedRb = (RadioButton) newToggle;
+                    // We need to parse the option letter (e.g., "A", "B") from the text.
+                    String answer = parseOption(selectedRb.getText());
+                    studentService.updateAnswer(question.getId(), answer);
+                }
+            });
+            answerNode = optionsBox;
         } else if (type == QuestionType.MULTI_CHOICE) {
             VBox optionsBox = new VBox(8);
             if (options.isEmpty()) {
@@ -112,33 +125,57 @@ public class ExamController {
             } else {
                 for (String optionText : options) { // Safe to iterate now
                     CheckBox cb = new CheckBox(optionText);
+                    // Add a listener to EACH checkbox.
+                    cb.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
+                        // When any checkbox changes, recalculate the entire answer string for this question.
+                        String currentAnswer = optionsBox.getChildren().stream()
+                                .filter(node -> node instanceof CheckBox && ((CheckBox) node).isSelected())
+                                .map(node -> parseOption(((CheckBox) node).getText()))
+                                .sorted() // Sort to ensure "AB" is the same as "BA"
+                                .reduce("", String::concat);
+                        studentService.updateAnswer(question.getId(), currentAnswer);
+                    });
                     optionsBox.getChildren().add(cb);
                 }
+                answerNode = optionsBox;
             }
-            return optionsBox;
         } else if (type == QuestionType.FILL_IN) {
             TextArea ta = new TextArea();
             ta.setPromptText("在此输入答案");
             ta.setPrefHeight(60);
-            return ta;
+            ta.textProperty().addListener((obs, oldText, newText) -> {
+                studentService.updateAnswer(question.getId(), newText);
+            });
+            answerNode = ta;
+        } else {
+            answerNode = new Label("不支持的题目类型");
         }
 
-        return new Label("不支持的题目类型");
+        return answerNode;
+    }
+
+    /**
+     * A helper method to extract the option letter (A, B, C...) from the full option text.
+     * Assumes format like "A. Some text" or "T. True".
+     */
+    private String parseOption(String text) {
+        if (text != null && text.contains(".")) {
+            return text.substring(0, text.indexOf(".")).trim();
+        }
+        return text; // Fallback
     }
 
     @FXML
     private void handleSubmit() {
-        // TODO: In the next phase, we will implement the logic to:
-        // 1. Collect all answers from the UI controls.
-        // 2. Create a List<StudentAnswer>.
-        // 3. Send an ANSWER_SUBMIT message to the server.
-        System.out.println("Exam submitted!");
+        List<StudentAnswer> answers = studentService.getAllAnswers();
+        System.out.println("Submitting answers: " + answers);
+
         studentService.stopExamTimer();
-        // For now, just show a confirmation.
+        // TODO: Send answers to server
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("提交成功");
-        alert.setHeaderText(null);
-        alert.setContentText("您的答案已提交！请等待老师公布成绩。");
+        alert.setHeaderText("答案已收集，准备提交！");
+        alert.setContentText("共收集到 " + answers.size() + " 道题的答案。");
         alert.showAndWait();
 
         // Optionally, disable the submit button or navigate away.
