@@ -12,6 +12,10 @@
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.ColumnConstraints?>
 
 <BorderPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-1.0" minWidth="-1.0" prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bit.examsystem.teacher.controller.MainController">
     <top>
@@ -45,10 +49,6 @@
         <TabPane fx:id="mainTabPane" prefHeight="200.0" prefWidth="200.0" tabClosingPolicy="UNAVAILABLE" BorderPane.alignment="CENTER">
             <tabs>
                 <Tab text="考试管理">
-                    <!-- TODO: 在这里嵌入考试管理的 FXML -->
-                </Tab>
-                <Tab text="学生监控">
-<!--                    <Tab text="在线学生">-->
                     <content>
                         <BorderPane>
                             <top>
@@ -59,6 +59,34 @@
                                 </HBox>
                             </top>
                             <center>
+                                <!-- 2. Add the new Dashboard VBox here -->
+                                <VBox fx:id="dashboardPane" alignment="CENTER" spacing="20" style="-fx-padding: 20;">
+                                    <Label text="当前状态" style="-fx-font-size: 24px; -fx-font-weight: bold;" />
+                                    <Label fx:id="examStatusLabel" text="等待开始" style="-fx-font-size: 36px; -fx-text-fill: #888;" />
+                                    <Separator maxWidth="400.0" />
+                                    <GridPane hgap="10" vgap="10" alignment="CENTER">
+                                        <columnConstraints><ColumnConstraints prefWidth="150"/><ColumnConstraints prefWidth="100"/></columnConstraints>
+
+                                        <Label text="当前考试:" GridPane.rowIndex="0" style="-fx-font-weight: bold;"/>
+                                        <Label fx:id="currentExamTitleLabel" text="-" GridPane.columnIndex="1" GridPane.rowIndex="0" />
+
+                                        <Label text="在线学生数:" GridPane.rowIndex="1" style="-fx-font-weight: bold;"/>
+                                        <Label fx:id="onlineStudentCountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="1" />
+
+                                        <Label text="已提交答卷:" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
+                                        <Label fx:id="submittedCountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+                                    </GridPane>
+                                </VBox>
+                            </center>
+                        </BorderPane>
+                    </content>
+                </Tab>
+                <Tab text="学生监控">
+<!--                    <Tab text="在线学生">-->
+                    <content>
+<!--                        <BorderPane>-->
+
+<!--                            <center>-->
                                 <TableView fx:id="studentsTableView">
                                     <columns>
                                         <TableColumn fx:id="studentIdColumn" prefWidth="150.0" text="学号" />
@@ -70,8 +98,8 @@
                                         <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
                                     </columnResizePolicy>
                                 </TableView>
-                            </center>
-                        </BorderPane>
+<!--                            </center>-->
+<!--                        </BorderPane>-->
                     </content>
 <!--                    </Tab>-->
                 </Tab>

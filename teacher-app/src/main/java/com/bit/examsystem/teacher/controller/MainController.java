@@ -13,10 +13,7 @@ import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
-import javafx.scene.control.ComboBox;
-import javafx.scene.control.ListCell;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
+import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.Scene;
 import javafx.stage.Modality;
@@ -27,7 +24,7 @@ import java.util.Collection;
 import java.sql.SQLException;
 
 public class MainController implements OnlineStudentListener{
-
+    private enum ExamState { WAITING, IN_PROGRESS, FINISHED }
     // Service 成员变量，将由外部注入
     private final ExamService examService;
     private final ClientConnectionManager connectionManager = ClientConnectionManager.getInstance();
@@ -38,10 +35,20 @@ public class MainController implements OnlineStudentListener{
     @FXML private TableColumn<Student, String> ipColumn;
     @FXML private TableColumn<Student, Boolean> statusColumn;
     @FXML private ComboBox<ExamPaper> examSelectionComboBox;
+    @FXML private Label examStatusLabel;
+    @FXML private Label currentExamTitleLabel;
+    @FXML private Label onlineStudentCountLabel;
+    @FXML private Label submittedCountLabel;
+    @FXML private TabPane mainTabPane; // To switch tabs programmatically
 
     private final ExamManagementService examManagementService = new ExamManagementServiceImpl();
     private final ObservableList<ExamPaper> availableExams = FXCollections.observableArrayList();
     private final ObservableList<Student> observableStudentList = FXCollections.observableArrayList();
+    // --- State Management ---
+    private ExamState currentExamState = ExamState.WAITING;
+    private ExamPaper activeExam;
+    // We will need a way to track submissions later
+    // private Set<String> submittedStudentIds = new HashSet<>();
 
     /**
      * 构造函数注入：这是实现依赖注入的关键。
@@ -91,6 +98,8 @@ public class MainController implements OnlineStudentListener{
 
         // 2. Load the list of available exams
         loadAvailableExams();
+
+        updateDashboard();
     }
 
     private void loadAvailableExams() {
@@ -115,9 +124,33 @@ public class MainController implements OnlineStudentListener{
         Platform.runLater(() -> {
             System.out.println("UI: Updating student list...");
             observableStudentList.setAll(currentStudents);
+            updateDashboard(); // Update dashboard counts when student list changes
         });
     }
 
+    private void updateDashboard() {
+        onlineStudentCountLabel.setText(String.valueOf(connectionManager.getOnlineStudents().size()));
+        // submittedCountLabel.setText(String.valueOf(submittedStudentIds.size())); // For later
+
+        switch (currentExamState) {
+            case WAITING:
+                examStatusLabel.setText("等待开始");
+                examStatusLabel.setStyle("-fx-text-fill: #888;");
+                currentExamTitleLabel.setText("-");
+                break;
+            case IN_PROGRESS:
+                examStatusLabel.setText("考试进行中");
+                examStatusLabel.setStyle("-fx-text-fill: #4CAF50;");
+                if (activeExam != null) {
+                    currentExamTitleLabel.setText(activeExam.getTitle());
+                }
+                break;
+            case FINISHED:
+                examStatusLabel.setText("考试已结束");
+                examStatusLabel.setStyle("-fx-text-fill: #f44336;");
+                break;
+        }
+    }
 
     @FXML
     void handleStartServer(ActionEvent event) {
@@ -184,11 +217,29 @@ public class MainController implements OnlineStudentListener{
             // Show a confirmation dialog before starting.
             // Optional but recommended.
 
+            // Check if an exam is already in progress
+            if (currentExamState == ExamState.IN_PROGRESS) {
+                // Show alert: "An exam is already in progress. Please end it before starting a new one."
+                System.err.println("UI: Cannot start a new exam while one is in progress.");
+                return;
+            }
             // Call the service to start the exam broadcast.
             examService.startExam(fullExam);
 
+            // Update the application state
+            this.activeExam = fullExam;
+            this.currentExamState = ExamState.IN_PROGRESS;
+            // submittedStudentIds.clear(); // For later
+
+            System.out.println("UI: Exam '" + activeExam.getTitle() + "' has started.");
+
+            // Update the dashboard and switch to the monitoring tab
+            updateDashboard();
+            mainTabPane.getSelectionModel().select(1); // Select the "考试监控" tab (index 1)
         } catch (SQLException e) {
             e.printStackTrace(); // Show alert
         }
+
+
     }
 }
