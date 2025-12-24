@@ -75,10 +75,16 @@
 
                                         <Label text="已提交答卷:" GridPane.rowIndex="2" style="-fx-font-weight: bold;"/>
                                         <Label fx:id="submittedCountLabel" text="0" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+
+                                        <Label text="结束倒计时:" GridPane.rowIndex="3" style="-fx-font-weight: bold; -fx-text-fill: red;"/>
+                                        <Label fx:id="examTimerLabel" text="--:--:--" GridPane.columnIndex="1" GridPane.rowIndex="3" style="-fx-font-weight: bold; -fx-text-fill: red; -fx-font-size: 16px;"/>
                                     </GridPane>
+<!--                                    <Separator maxWidth="400.0" />-->
+<!--                                    <Button onAction="#handleEndExam" text="手动结束考试" prefHeight="40" style="-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold;"/>-->
                                 </VBox>
                             </center>
                         </BorderPane>
+
                     </content>
                 </Tab>
                 <Tab text="学生监控">

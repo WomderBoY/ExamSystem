@@ -9,6 +9,7 @@ import com.bit.examsystem.teacher.service.ExamManagementService;
 import com.bit.examsystem.teacher.service.ExamManagementServiceImpl;
 import com.bit.examsystem.teacher.service.SubmissionService;
 import com.bit.examsystem.teacher.service.SubmissionServiceImpl;
+import com.bit.examsystem.teacher.service.listener.SubmissionListener;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -22,10 +23,12 @@ import javafx.stage.Modality;
 import javafx.stage.Stage;
 import java.io.IOException;
 import java.util.Collection;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import java.sql.SQLException;
 
-public class MainController implements OnlineStudentListener{
+public class MainController implements OnlineStudentListener, SubmissionListener {
     private enum ExamState { WAITING, IN_PROGRESS, FINISHED }
     // Service 成员变量，将由外部注入
     private final ExamService examService;
@@ -38,6 +41,7 @@ public class MainController implements OnlineStudentListener{
     @FXML private TableColumn<Student, Boolean> statusColumn;
     @FXML private ComboBox<ExamPaper> examSelectionComboBox;
     @FXML private Label examStatusLabel;
+    @FXML private Label examTimerLabel;
     @FXML private Label currentExamTitleLabel;
     @FXML private Label onlineStudentCountLabel;
     @FXML private Label submittedCountLabel;
@@ -49,8 +53,12 @@ public class MainController implements OnlineStudentListener{
     // --- State Management ---
     private ExamState currentExamState = ExamState.WAITING;
     private ExamPaper activeExam;
+    private final SubmissionService submissionService = SubmissionServiceImpl.getInstance();
     // We will need a way to track submissions later
     // private Set<String> submittedStudentIds = new HashSet<>();
+
+    private Timer examTimer;
+    private long examEndTime;
 
     /**
      * 构造函数注入：这是实现依赖注入的关键。
@@ -80,6 +88,7 @@ public class MainController implements OnlineStudentListener{
 
         // 5. Register this controller as a listener for connection changes
         connectionManager.addListener(this);
+        submissionService.addListener(this);
 
         // 1. Configure the ComboBox
         examSelectionComboBox.setItems(availableExams);
@@ -130,14 +139,25 @@ public class MainController implements OnlineStudentListener{
         });
     }
 
+    /**
+     * This is the implementation of our SubmissionListener interface.
+     * It will be called by a Netty thread whenever a submission is processed.
+     */
+    @Override
+    public void onSubmissionReceived() { // <-- 4. Implement the new method
+        // All UI updates must run on the JavaFX Application Thread.
+        Platform.runLater(this::updateDashboard);
+    }
+
     private void updateDashboard() {
         onlineStudentCountLabel.setText(String.valueOf(connectionManager.getOnlineStudents().size()));
-        // submittedCountLabel.setText(String.valueOf(submittedStudentIds.size())); // For later
+        submittedCountLabel.setText(String.valueOf(submissionService.getSubmissionCount()));
 
         switch (currentExamState) {
             case WAITING:
                 examStatusLabel.setText("等待开始");
                 examStatusLabel.setStyle("-fx-text-fill: #888;");
+                examTimerLabel.setText("--:--:--");
                 currentExamTitleLabel.setText("-");
                 break;
             case IN_PROGRESS:
@@ -150,6 +170,9 @@ public class MainController implements OnlineStudentListener{
             case FINISHED:
                 examStatusLabel.setText("考试已结束");
                 examStatusLabel.setStyle("-fx-text-fill: #f44336;");
+                if (activeExam != null) {
+                    currentExamTitleLabel.setText(activeExam.getTitle() + " (已结束)");
+                }
                 break;
         }
     }
@@ -165,12 +188,14 @@ public class MainController implements OnlineStudentListener{
     @FXML
     void handleStopServer(ActionEvent event) {
         System.out.println("UI: Stop Server menu item clicked.");
+        endExam();
         examService.stopServer();
     }
 
     @FXML
     void handleExit(ActionEvent event) {
         System.out.println("UI: Exit menu item clicked.");
+        endExam();
         // 在退出前确保服务器已关闭
         examService.stopServer();
         // 正常退出应用
@@ -230,6 +255,9 @@ public class MainController implements OnlineStudentListener{
             // Call the service to start the exam broadcast.
             examService.startExam(fullExam);
 
+            // Start the server-side timer
+            startLocalExamTimer(fullExam.getDurationMinutes());
+
             // Update the application state
             this.activeExam = fullExam;
             this.currentExamState = ExamState.IN_PROGRESS;
@@ -243,7 +271,70 @@ public class MainController implements OnlineStudentListener{
         } catch (SQLException e) {
             e.printStackTrace(); // Show alert
         }
-
-
     }
+
+    private void startLocalExamTimer(int durationMinutes) {
+        // Stop any existing timer first
+        stopLocalExamTimer();
+
+        examEndTime = System.currentTimeMillis() + (long) durationMinutes * 60 * 1000;
+        examTimer = new Timer(true); // Daemon thread
+
+        examTimer.scheduleAtFixedRate(new TimerTask() {
+            @Override
+            public void run() {
+                long remainingMillis = examEndTime - System.currentTimeMillis();
+
+                // Switch to JavaFX thread to update UI
+                Platform.runLater(() -> {
+                    if (remainingMillis > 0) {
+                        long hours = remainingMillis / 3600000;
+                        long minutes = (remainingMillis % 3600000) / 60000;
+                        long seconds = (remainingMillis % 60000) / 1000;
+                        examTimerLabel.setText(String.format("%02d:%02d:%02d", hours, minutes, seconds));
+                    } else {
+                        // Time is up!
+                        examTimerLabel.setText("00:00:00");
+                        endExam();
+                    }
+                });
+            }
+        }, 0, 1000); // Start now, tick every second
+    }
+
+    private void stopLocalExamTimer() {
+        if (examTimer != null) {
+            examTimer.cancel();
+            examTimer = null;
+        }
+    }
+
+    /**
+     * Centralized method to handle the end of an exam.
+     */
+    private void endExam() {
+        // Stop the timer to prevent it from firing again
+        stopLocalExamTimer();
+
+        if (currentExamState == ExamState.IN_PROGRESS) {
+            System.out.println("Exam '" + activeExam.getTitle() + "' has officially ended.");
+            currentExamState = ExamState.FINISHED;
+            // Optionally, broadcast an EXAM_END message to force-submit all student clients
+            // examService.endExam(); // We can add this to ExamService later
+
+            updateDashboard();
+        }
+    }
+
+    // It's also good practice to have a manual "End Exam" button
+    // This will be useful for the next phase, but we can add a placeholder now.
+//    @FXML
+//    void handleEndExam(ActionEvent event) { // This method needs a button in the FXML
+//        if (currentExamState == ExamState.IN_PROGRESS) {
+//            // Show confirmation dialog
+//            endExam();
+//        } else {
+//            // Show info alert: "No exam is currently in progress."
+//        }
+//    }
 }

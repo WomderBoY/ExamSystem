@@ -1,6 +1,8 @@
 package com.bit.examsystem.teacher.service;
 
 import com.bit.examsystem.common.model.StudentAnswer;
+import com.bit.examsystem.teacher.service.listener.SubmissionListener;
+
 import java.util.List;
 import java.util.Map;
 
@@ -22,4 +24,8 @@ public interface SubmissionService {
      * Clears all submission data. Called when a new exam starts.
      */
     void clearSubmissions();
+
+    void addListener(SubmissionListener listener);
+
+    void removeListener(SubmissionListener listener);
 }
