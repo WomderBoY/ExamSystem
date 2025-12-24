@@ -1,5 +1,6 @@
 package com.bit.examsystem.teacher.service;
 
+import com.bit.examsystem.common.model.ExamPaper;
 import com.bit.examsystem.common.model.StudentAnswer;
 import com.bit.examsystem.teacher.service.listener.SubmissionListener;
 
@@ -28,4 +29,6 @@ public interface SubmissionService {
     void addListener(SubmissionListener listener);
 
     void removeListener(SubmissionListener listener);
+
+    public void setActiveExam(ExamPaper exam);
 }

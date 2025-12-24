@@ -9,6 +9,9 @@ import com.bit.examsystem.common.network.ProtocolInitializer;
 import com.bit.examsystem.common.util.JsonUtil;
 import com.bit.examsystem.teacher.service.SubmissionService;
 import com.bit.examsystem.teacher.service.SubmissionServiceImpl;
+import com.bit.examsystem.teacher.db.dao.StudentDAO;
+import com.bit.examsystem.teacher.db.dao.StudentDAOImpl;
+import java.sql.SQLException;
 import io.netty.channel.group.ChannelGroup;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
@@ -24,10 +27,9 @@ import java.util.List;
 public class TeacherBusinessHandler extends SimpleChannelInboundHandler<Message<Object>> {
 
     private final ClientConnectionManager connectionManager = ClientConnectionManager.getInstance();
-
     private final ChannelGroup studentChannels;
-
     private final SubmissionService submissionService = SubmissionServiceImpl.getInstance();
+    private final StudentDAO studentDAO = new StudentDAOImpl();
 
     public TeacherBusinessHandler(ChannelGroup studentChannels) {
         this.studentChannels = studentChannels;
@@ -102,6 +104,19 @@ public class TeacherBusinessHandler extends SimpleChannelInboundHandler<Message<
             if (connectionManager.isStudentIdOnline(studentInfo.getId())) {
                 System.out.printf("[Login Rejected] Duplicate login attempt for student ID: %s%n", studentInfo.getId());
                 LoginResponse payload = new LoginResponse(false, "This student ID is already logged in.");
+                Message<LoginResponse> response = new Message<>(MessageType.LOGIN_RESP, payload);
+                ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+                return;
+            }
+
+            try {
+                // Persist the student to the database before proceeding.
+                studentDAO.saveOrUpdate(studentInfo);
+            } catch (SQLException e) {
+                System.err.println("DATABASE ERROR: Failed to save student info for ID: " + studentInfo.getId());
+                e.printStackTrace();
+                // If we can't save the student, we must reject the login.
+                LoginResponse payload = new LoginResponse(false, "Server database error during login.");
                 Message<LoginResponse> response = new Message<>(MessageType.LOGIN_RESP, payload);
                 ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
                 return;

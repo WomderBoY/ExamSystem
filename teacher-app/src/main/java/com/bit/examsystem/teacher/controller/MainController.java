@@ -251,7 +251,9 @@ public class MainController implements OnlineStudentListener, SubmissionListener
                 return;
             }
 
-            SubmissionServiceImpl.getInstance().clearSubmissions(); // Clear old data
+            submissionService.setActiveExam(fullExam);
+            submissionService.clearSubmissions();
+//            SubmissionServiceImpl.getInstance().clearSubmissions(); // Clear old data
             // Call the service to start the exam broadcast.
             examService.startExam(fullExam);
 
