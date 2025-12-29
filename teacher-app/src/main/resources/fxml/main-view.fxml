@@ -81,6 +81,7 @@
                                     </GridPane>
 <!--                                    <Separator maxWidth="400.0" />-->
 <!--                                    <Button onAction="#handleEndExam" text="手动结束考试" prefHeight="40" style="-fx-background-color: #f44336; -fx-text-fill: white; -fx-font-weight: bold;"/>-->
+                                    <Button fx:id="gradeExamButton" onAction="#handleGradeExam" text="自动阅卷" prefHeight="40" style="-fx-background-color: #007bff; -fx-text-fill: white; -fx-font-weight: bold;"/>
                                 </VBox>
                             </center>
                         </BorderPane>

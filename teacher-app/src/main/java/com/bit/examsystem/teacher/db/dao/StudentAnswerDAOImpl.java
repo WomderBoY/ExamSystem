@@ -5,8 +5,12 @@ import com.bit.examsystem.teacher.db.DatabaseManager;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class StudentAnswerDAOImpl implements StudentAnswerDAO {
     @Override
@@ -47,4 +51,42 @@ public class StudentAnswerDAOImpl implements StudentAnswerDAO {
             }
         }
     }
+
+    @Override
+    public Map<String, List<StudentAnswer>> findUnGradedAnswersByExamId(String examId) throws SQLException {
+        Map<String, List<StudentAnswer>> studentSubmissions = new HashMap<>();
+        // Fetch all answers for the exam where score is not yet set
+        String sql = "SELECT * FROM student_answers WHERE exam_id = ? AND score_awarded IS NULL";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, examId);
+            ResultSet rs = pstmt.executeQuery();
+
+            while (rs.next()) {
+                String studentId = rs.getString("student_id");
+                StudentAnswer answer = new StudentAnswer();
+                answer.setQuestionId(rs.getString("question_id"));
+                answer.setAnswer(rs.getString("answer"));
+
+                // Add the answer to the correct student's list
+                studentSubmissions.computeIfAbsent(studentId, k -> new ArrayList<>()).add(answer);
+            }
+        }
+        return studentSubmissions;
+    }
+
+    @Override
+    public void updateScore(int score, String examId, String studentId, String questionId, Connection connection) throws SQLException {
+        String sql = "UPDATE student_answers SET score_awarded = ? WHERE exam_id = ? AND student_id = ? AND question_id = ?";
+        try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+            pstmt.setInt(1, score);
+            pstmt.setString(2, examId);
+            pstmt.setString(3, studentId);
+            pstmt.setString(4, questionId);
+            pstmt.executeUpdate();
+        }
+    }
+
 }

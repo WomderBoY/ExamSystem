@@ -7,6 +7,8 @@ import com.bit.examsystem.teacher.network.listener.OnlineStudentListener;
 import com.bit.examsystem.teacher.service.ExamService;
 import com.bit.examsystem.teacher.service.ExamManagementService;
 import com.bit.examsystem.teacher.service.ExamManagementServiceImpl;
+import com.bit.examsystem.teacher.service.GradingService;
+import com.bit.examsystem.teacher.service.GradingServiceImpl;
 import com.bit.examsystem.teacher.service.SubmissionService;
 import com.bit.examsystem.teacher.service.SubmissionServiceImpl;
 import com.bit.examsystem.teacher.service.listener.SubmissionListener;
@@ -46,6 +48,7 @@ public class MainController implements OnlineStudentListener, SubmissionListener
     @FXML private Label onlineStudentCountLabel;
     @FXML private Label submittedCountLabel;
     @FXML private TabPane mainTabPane; // To switch tabs programmatically
+    @FXML private Button gradeExamButton;
 
     private final ExamManagementService examManagementService = new ExamManagementServiceImpl();
     private final ObservableList<ExamPaper> availableExams = FXCollections.observableArrayList();
@@ -56,6 +59,7 @@ public class MainController implements OnlineStudentListener, SubmissionListener
     private final SubmissionService submissionService = SubmissionServiceImpl.getInstance();
     // We will need a way to track submissions later
     // private Set<String> submittedStudentIds = new HashSet<>();
+    private final GradingService gradingService = new GradingServiceImpl();
 
     private Timer examTimer;
     private long examEndTime;
@@ -152,6 +156,8 @@ public class MainController implements OnlineStudentListener, SubmissionListener
     private void updateDashboard() {
         onlineStudentCountLabel.setText(String.valueOf(connectionManager.getOnlineStudents().size()));
         submittedCountLabel.setText(String.valueOf(submissionService.getSubmissionCount()));
+
+        gradeExamButton.setDisable(currentExamState != ExamState.FINISHED);
 
         switch (currentExamState) {
             case WAITING:
@@ -272,6 +278,37 @@ public class MainController implements OnlineStudentListener, SubmissionListener
             mainTabPane.getSelectionModel().select(1); // Select the "考试监控" tab (index 1)
         } catch (SQLException e) {
             e.printStackTrace(); // Show alert
+        }
+    }
+
+    @FXML
+    void handleGradeExam(ActionEvent event) {
+        if (activeExam == null || currentExamState != ExamState.FINISHED) {
+            // Show alert: "No exam has finished or is selected."
+            return;
+        }
+
+        try {
+            // Fetch the latest version of the exam with all questions/answers
+            ExamPaper fullExam = examManagementService.getExamWithQuestions(activeExam.getExamId());
+            if (fullExam == null) {
+                // Show error
+                return;
+            }
+
+            // Run the grading service
+            String summary = gradingService.gradeExam(fullExam);
+
+            // Show a success alert with the summary
+            Alert alert = new Alert(Alert.AlertType.INFORMATION);
+            alert.setTitle("阅卷完成");
+            alert.setHeaderText("自动阅卷已成功执行。");
+            alert.setContentText(summary);
+            alert.showAndWait();
+
+        } catch (SQLException e) {
+            // Show a detailed error alert
+            e.printStackTrace();
         }
     }
 
