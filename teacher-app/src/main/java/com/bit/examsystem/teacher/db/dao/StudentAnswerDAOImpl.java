@@ -89,4 +89,46 @@ public class StudentAnswerDAOImpl implements StudentAnswerDAO {
         }
     }
 
+    @Override
+    public int calculateTotalScore(String examId, String studentId) throws SQLException {
+        // SUM() will return NULL if no rows match, so COALESCE turns NULL into 0.
+        String sql = "SELECT COALESCE(SUM(score_awarded), 0) AS total_score FROM student_answers WHERE exam_id = ? AND student_id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, examId);
+            pstmt.setString(2, studentId);
+            ResultSet rs = pstmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt("total_score");
+            }
+        }
+        return 0;
+    }
+
+    @Override
+    public List<Map<String, Object>> findDetailedResults(String examId, String studentId) throws SQLException {
+        List<Map<String, Object>> results = new ArrayList<>();
+        // Join questions and student_answers to get all the data we need in one query
+        String sql = "SELECT q.title, q.correct_answer, sa.answer, sa.score_awarded, q.score " +
+                "FROM student_answers sa " +
+                "JOIN questions q ON sa.question_id = q.id " +
+                "WHERE sa.exam_id = ? AND sa.student_id = ?";
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, examId);
+            pstmt.setString(2, studentId);
+            ResultSet rs = pstmt.executeQuery();
+            while (rs.next()) {
+                Map<String, Object> row = new HashMap<>();
+                row.put("questionTitle", rs.getString("title"));
+                row.put("correctAnswer", rs.getString("correct_answer"));
+                row.put("studentAnswer", rs.getString("answer"));
+                row.put("scoreAwarded", rs.getInt("score_awarded"));
+                row.put("totalScore", rs.getInt("score"));
+                results.add(row);
+            }
+        }
+        return results;
+    }
 }

@@ -21,11 +21,11 @@
     <top>
         <MenuBar BorderPane.alignment="CENTER">
             <menus>
-                <Menu mnemonicParsing="false" text="文件(_F)">
-                    <items>
-                        <MenuItem mnemonicParsing="false" onAction="#handleExit" text="退出" />
-                    </items>
-                </Menu>
+<!--                <Menu mnemonicParsing="false" text="文件(_F)">-->
+<!--                    <items>-->
+<!--                        <MenuItem mnemonicParsing="false" onAction="#handleExit" text="退出" />-->
+<!--                    </items>-->
+<!--                </Menu>-->
                 <Menu mnemonicParsing="false" text="服务器(_S)">
                     <items>
                         <MenuItem fx:id="startServerMenuItem" mnemonicParsing="false" onAction="#handleStartServer" text="启动服务" />
@@ -35,6 +35,11 @@
                 <Menu mnemonicParsing="false" text="考试(_E)">
                     <items>
                         <MenuItem mnemonicParsing="false" onAction="#handleManageExams" text="试卷管理..." />
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="成绩(_R)">
+                    <items>
+                        <MenuItem mnemonicParsing="false" onAction="#handleShowResults" text="查看/导出成绩..." />
                     </items>
                 </Menu>
                 <Menu mnemonicParsing="false" text="帮助(_H)">
@@ -110,9 +115,9 @@
                     </content>
 <!--                    </Tab>-->
                 </Tab>
-                <Tab text="成绩批改">
-                    <!-- TODO: 在这里嵌入成绩批改的 FXML -->
-                </Tab>
+<!--                <Tab text="成绩批改">-->
+<!--                    &lt;!&ndash; TODO: 在这里嵌入成绩批改的 FXML &ndash;&gt;-->
+<!--                </Tab>-->
             </tabs>
         </TabPane>
     </center>

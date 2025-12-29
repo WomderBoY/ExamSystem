@@ -4,13 +4,7 @@ import com.bit.examsystem.common.model.Student;
 import com.bit.examsystem.common.model.ExamPaper;
 import com.bit.examsystem.teacher.network.ClientConnectionManager;
 import com.bit.examsystem.teacher.network.listener.OnlineStudentListener;
-import com.bit.examsystem.teacher.service.ExamService;
-import com.bit.examsystem.teacher.service.ExamManagementService;
-import com.bit.examsystem.teacher.service.ExamManagementServiceImpl;
-import com.bit.examsystem.teacher.service.GradingService;
-import com.bit.examsystem.teacher.service.GradingServiceImpl;
-import com.bit.examsystem.teacher.service.SubmissionService;
-import com.bit.examsystem.teacher.service.SubmissionServiceImpl;
+import com.bit.examsystem.teacher.service.*;
 import com.bit.examsystem.teacher.service.listener.SubmissionListener;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -198,15 +192,15 @@ public class MainController implements OnlineStudentListener, SubmissionListener
         examService.stopServer();
     }
 
-    @FXML
-    void handleExit(ActionEvent event) {
-        System.out.println("UI: Exit menu item clicked.");
-        endExam();
-        // 在退出前确保服务器已关闭
-        examService.stopServer();
-        // 正常退出应用
-        Platform.exit();
-    }
+//    @FXML
+//    void handleExit(ActionEvent event) {
+//        System.out.println("UI: Exit menu item clicked.");
+//        endExam();
+//        // 在退出前确保服务器已关闭
+//        examService.stopServer();
+//        // 正常退出应用
+//        Platform.exit();
+//    }
 
     @FXML
     void handleManageExams(ActionEvent event) {
@@ -311,6 +305,26 @@ public class MainController implements OnlineStudentListener, SubmissionListener
             e.printStackTrace();
         }
     }
+
+    @FXML
+    void handleShowResults(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/results-view.fxml"));
+
+            // Setup DI for the new controller
+            loader.setControllerFactory(param ->
+                    new ResultsController(new ResultService(), new ExamManagementServiceImpl()));
+
+            Stage resultsStage = new Stage();
+            resultsStage.setTitle("考试成绩");
+            resultsStage.initModality(Modality.WINDOW_MODAL);
+            resultsStage.setScene(new Scene(loader.load()));
+            resultsStage.showAndWait();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     private void startLocalExamTimer(int durationMinutes) {
         // Stop any existing timer first

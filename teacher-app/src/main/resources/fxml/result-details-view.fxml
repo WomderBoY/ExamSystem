@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.bit.examsystem.teacher.controller.ResultDetailsController">
+    <ScrollPane fitToWidth="true" VBox.vgrow="ALWAYS">
+        <TableView fx:id="detailsTableView">
+            <columns>
+                <TableColumn fx:id="questionTitleColumn" text="题干"/>
+                <TableColumn fx:id="studentAnswerColumn" text="学生答案"/>
+                <TableColumn fx:id="correctAnswerColumn" text="正确答案"/>
+                <TableColumn fx:id="scoreColumn" text="得分/总分"/>
+            </columns>
+        </TableView>
+    </ScrollPane>
+</VBox>

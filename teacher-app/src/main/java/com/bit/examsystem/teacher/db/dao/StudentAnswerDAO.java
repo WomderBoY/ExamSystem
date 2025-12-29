@@ -33,4 +33,7 @@ public interface StudentAnswerDAO {
      * @param connection A shared database connection for transactional updates.
      */
     void updateScore(int score, String examId, String studentId, String questionId, Connection connection) throws SQLException;
+
+    List<Map<String, Object>> findDetailedResults(String examId, String studentId) throws SQLException;
+    int calculateTotalScore(String examId, String studentId) throws SQLException;
 }
