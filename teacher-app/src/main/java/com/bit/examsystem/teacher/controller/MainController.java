@@ -390,4 +390,25 @@ public class MainController implements OnlineStudentListener, SubmissionListener
 //            // Show info alert: "No exam is currently in progress."
 //        }
 //    }
+
+    @FXML
+    void handleShowAbout(ActionEvent event) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/fxml/about-view.fxml"));
+            // This controller has no dependencies, so we don't need a factory.
+
+            Stage aboutStage = new Stage();
+            aboutStage.setTitle("使用说明");
+            aboutStage.initModality(Modality.WINDOW_MODAL);
+            aboutStage.initOwner(mainTabPane.getScene().getWindow()); // Set owner window
+
+            Scene scene = new Scene(loader.load());
+            aboutStage.setScene(scene);
+
+            aboutStage.showAndWait();
+        } catch (IOException e) {
+            e.printStackTrace();
+            // Optionally, show an error alert here.
+        }
+    }
 }
