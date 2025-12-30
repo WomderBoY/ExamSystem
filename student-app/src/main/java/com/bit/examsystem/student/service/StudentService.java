@@ -45,4 +45,6 @@ public interface StudentService {
      * Submits all cached answers to the server.
      */
     void submitAnswers();
+
+    String getAnswerForQuestion(String questionId);
 }

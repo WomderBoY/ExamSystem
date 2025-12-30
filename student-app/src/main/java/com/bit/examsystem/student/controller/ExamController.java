@@ -88,6 +88,7 @@ public class ExamController {
         Node answerNode = null;
         QuestionType type = question.getType();
         List<String> options = question.getOptions(); // Get the options list
+        String cachedAnswer = studentService.getAnswerForQuestion(question.getId());
 
         // --- Defensive Null Check ---
         if (options == null) {
@@ -110,6 +111,9 @@ public class ExamController {
                 for (String optionText : options) { // Safe to iterate now
                     RadioButton rb = new RadioButton(optionText);
                     rb.setToggleGroup(toggleGroup);
+                    if (cachedAnswer != null && cachedAnswer.equals(parseOption(optionText))) {
+                        rb.setSelected(true);
+                    }
                     optionsBox.getChildren().add(rb);
                 }
             }
@@ -129,6 +133,9 @@ public class ExamController {
             } else {
                 for (String optionText : options) { // Safe to iterate now
                     CheckBox cb = new CheckBox(optionText);
+                    if (cachedAnswer != null && cachedAnswer.contains(parseOption(optionText))) {
+                        cb.setSelected(true);
+                    }
                     // Add a listener to EACH checkbox.
                     cb.selectedProperty().addListener((obs, wasSelected, isSelected) -> {
                         // When any checkbox changes, recalculate the entire answer string for this question.
@@ -147,6 +154,9 @@ public class ExamController {
             TextArea ta = new TextArea();
             ta.setPromptText("在此输入答案");
             ta.setPrefHeight(60);
+            if (cachedAnswer != null) {
+                ta.setText(cachedAnswer);
+            }
             ta.textProperty().addListener((obs, oldText, newText) -> {
                 studentService.updateAnswer(question.getId(), newText);
             });

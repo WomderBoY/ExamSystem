@@ -1,11 +1,12 @@
 package com.bit.examsystem.student.service;
 
+import com.bit.examsystem.common.dto.ExamPaperDTO;
 import com.bit.examsystem.common.model.Student;
+import com.bit.examsystem.common.model.StudentAnswer;
 import com.bit.examsystem.common.message.Message;
 import com.bit.examsystem.common.message.MessageType;
-import com.bit.examsystem.common.dto.ExamPaperDTO;
 import com.bit.examsystem.student.network.StudentClient;
-import com.bit.examsystem.common.model.StudentAnswer;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,7 @@ public class StudentServiceImpl implements StudentService {
 
     // Key: questionId, Value: The student's answer string.
     private final Map<String, String> answerCache = new ConcurrentHashMap<>();
+    private final AnswerCacheService cacheService = new AnswerCacheServiceImpl();
 
     // --- Singleton Pattern ---
     private static StudentServiceImpl INSTANCE;
@@ -72,6 +74,8 @@ public class StudentServiceImpl implements StudentService {
         this.currentExam = exam;
         // Calculate the end time based on the duration
         this.endTime = System.currentTimeMillis() + (long) exam.getDurationMinutes() * 60 * 1000;
+
+        loadAnswersFromCache();
     }
 
     @Override
@@ -119,7 +123,12 @@ public class StudentServiceImpl implements StudentService {
             answerCache.put(questionId, answer);
         }
         // For debugging, print the current state of the cache.
-        System.out.println("Answer cache updated: " + answerCache);
+//        System.out.println("Answer cache updated: " + answerCache);
+
+        // **CRITICAL**: Persist to file on every update
+        if (currentExam != null && currentStudent != null) {
+            cacheService.saveAnswers(currentExam.getExamId(), currentStudent.getId(), answerCache);
+        }
     }
 
     @Override
@@ -137,6 +146,9 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public void clearAnswers() {
         answerCache.clear();
+        if (currentExam != null && currentStudent != null) {
+            cacheService.clearCache(currentExam.getExamId(), currentStudent.getId());
+        }
     }
 
     @Override
@@ -150,5 +162,21 @@ public class StudentServiceImpl implements StudentService {
         // 3. Use the network client to send the message.
         System.out.println("Service: Sending " + answers.size() + " answers to the server.");
         studentClient.sendMessage(submissionMessage);
+
+        clearAnswers();
+    }
+
+    // New private helper method
+    private void loadAnswersFromCache() {
+        if (currentExam != null && currentStudent != null) {
+            Map<String, String> loadedAnswers = cacheService.loadAnswers(currentExam.getExamId(), currentStudent.getId());
+            answerCache.putAll(loadedAnswers);
+        }
+    }
+
+    // Add this new public method to the interface and implementation
+    @Override
+    public String getAnswerForQuestion(String questionId) {
+        return answerCache.get(questionId);
     }
 }
