@@ -24,8 +24,8 @@
                 <Label text="考试时长(分钟):" GridPane.rowIndex="1" />
                 <TextField fx:id="durationField" GridPane.columnIndex="1" GridPane.rowIndex="1" />
                 <!-- Start Time can be a more complex picker, using TextField for now -->
-                <Label text="开始时间戳:" GridPane.rowIndex="2" />
-                <TextField fx:id="startTimeField" GridPane.columnIndex="1" GridPane.rowIndex="2" />
+<!--                <Label text="开始时间戳:" GridPane.rowIndex="2" />-->
+<!--                <TextField fx:id="startTimeField" GridPane.columnIndex="1" GridPane.rowIndex="2" />-->
             </GridPane>
 
             <Separator/>

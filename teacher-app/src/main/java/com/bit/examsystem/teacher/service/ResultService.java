@@ -6,9 +6,8 @@ import com.bit.examsystem.teacher.db.dao.StudentDAO;
 import com.bit.examsystem.teacher.db.dao.StudentDAOImpl;
 import com.bit.examsystem.teacher.dto.StudentResult;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,9 +42,18 @@ public class ResultService {
     }
 
     public void exportToCsv(List<StudentResult> results, File file) throws IOException {
-        try (FileWriter writer = new FileWriter(file)) {
+        try (
+                OutputStreamWriter writer = new OutputStreamWriter(
+                        new FileOutputStream(file),
+                        StandardCharsets.UTF_8
+                )
+        ) {
+            // 写入 UTF-8 BOM（关键）
+            writer.write('\uFEFF');
+
             // Write header
             writer.append("Student ID,Student Name,Total Score\n");
+
             // Write data
             for (StudentResult result : results) {
                 writer.append(String.format("%s,%s,%d\n",

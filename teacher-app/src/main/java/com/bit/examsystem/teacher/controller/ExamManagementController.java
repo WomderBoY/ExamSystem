@@ -23,7 +23,7 @@ public class ExamManagementController {
     @FXML private ListView<ExamPaper> examListView;
     @FXML private TextField titleField;
     @FXML private TextField durationField;
-    @FXML private TextField startTimeField;
+//    @FXML private TextField startTimeField;
     @FXML private TableView<Question> questionsTableView;
     @FXML private TableColumn<Question, String> questionTitleColumn;
     @FXML private TableColumn<Question, QuestionType> questionTypeColumn;
@@ -97,7 +97,7 @@ public class ExamManagementController {
             ExamPaper fullExam = examService.getExamWithQuestions(exam.getExamId());
             titleField.setText(fullExam.getTitle());
             durationField.setText(String.valueOf(fullExam.getDurationMinutes()));
-            startTimeField.setText(String.valueOf(fullExam.getStartTime()));
+//            startTimeField.setText(String.valueOf(fullExam.getStartTime()));
             currentQuestions.setAll(fullExam.getQuestions());
         } catch (SQLException e) {
             e.printStackTrace(); // Show alert
@@ -155,14 +155,27 @@ public class ExamManagementController {
 
     @FXML
     private void handleSaveExam() {
-        if (currentExam == null || titleField.getText().trim().isEmpty()) {
+        if (currentExam == null) {
             // Show validation error alert
             return;
         }
+        if (titleField.getText().trim().isEmpty() || durationField.getText().trim().isEmpty()) {
+            showWarningAlert("请填写完整的考试信息（标题和时长）。");
+            return;
+        }
+        try {
+            // Also validate that duration is a valid number
+            Integer.parseInt(durationField.getText().trim());
+        } catch (NumberFormatException e) {
+            showWarningAlert("考试时长必须是一个有效的数字。");
+            return;
+        }
+
         // Assemble the ExamPaper object from the UI fields
         currentExam.setTitle(titleField.getText().trim());
         currentExam.setDurationMinutes(Integer.parseInt(durationField.getText()));
-        currentExam.setStartTime(Long.parseLong(startTimeField.getText()));
+//        currentExam.setStartTime(Long.parseLong(startTimeField.getText()));
+        currentExam.setStartTime(0L);
         currentExam.setQuestions(currentQuestions);
 
         try {
@@ -183,7 +196,7 @@ public class ExamManagementController {
     private void clearDetails() {
         titleField.clear();
         durationField.clear();
-        startTimeField.clear();
+//        startTimeField.clear();
         currentQuestions.clear();
         currentExam = null;
     }
@@ -217,7 +230,7 @@ public class ExamManagementController {
         // Text fields for exam details
         titleField.setDisable(!isExamActive);
         durationField.setDisable(!isExamActive);
-        startTimeField.setDisable(!isExamActive);
+//        startTimeField.setDisable(!isExamActive);
 
         // Buttons for question management
         addQuestionButton.setDisable(!isExamActive);
@@ -229,5 +242,18 @@ public class ExamManagementController {
 
         // The "Delete Exam" button should only be enabled if an item is actually selected in the list
         deleteExamButton.setDisable(examListView.getSelectionModel().getSelectedItem() == null);
+    }
+
+    /**
+     * --- NEW HELPER METHOD ---
+     * Displays a standardized warning alert dialog.
+     * @param content The message to display to the user.
+     */
+    private void showWarningAlert(String content) {
+        Alert alert = new Alert(Alert.AlertType.WARNING);
+        alert.setTitle("输入无效");
+        alert.setHeaderText(null);
+        alert.setContentText(content);
+        alert.showAndWait();
     }
 }
