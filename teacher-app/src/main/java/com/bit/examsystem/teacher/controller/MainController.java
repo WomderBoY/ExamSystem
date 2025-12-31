@@ -43,6 +43,7 @@ public class MainController implements OnlineStudentListener, SubmissionListener
     @FXML private Label submittedCountLabel;
     @FXML private TabPane mainTabPane; // To switch tabs programmatically
     @FXML private Button gradeExamButton;
+    @FXML private Label statusBarLabel;
 
     private final ExamManagementService examManagementService = new ExamManagementServiceImpl();
     private final ObservableList<ExamPaper> availableExams = FXCollections.observableArrayList();
@@ -180,16 +181,27 @@ public class MainController implements OnlineStudentListener, SubmissionListener
     @FXML
     void handleStartServer(ActionEvent event) {
         System.out.println("UI: Start Server menu item clicked.");
+        statusBarLabel.setText("正在启动服务器...");
         // 调用 Service 层的方法
         examService.startServer(8888);
-        // TODO: 后续可以添加一个弹窗让用户输入端口
+        new Thread(() -> {
+            try {
+                // Wait a moment for the server to bind the port.
+                Thread.sleep(500);
+                Platform.runLater(() -> statusBarLabel.setText("服务器已在端口 8888 成功启动"));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
+        }).start();
     }
 
     @FXML
     void handleStopServer(ActionEvent event) {
+        statusBarLabel.setText("正在停止服务器...");
         System.out.println("UI: Stop Server menu item clicked.");
         endExam();
         examService.stopServer();
+        statusBarLabel.setText("服务器已停止");
     }
 
 //    @FXML
@@ -218,6 +230,11 @@ public class MainController implements OnlineStudentListener, SubmissionListener
             dialogStage.setScene(new Scene(loader.load()));
 
             dialogStage.showAndWait();
+
+            // After the window is closed, we assume changes might have been made,
+            // so we reload the list of exams for our ComboBox.
+            System.out.println("UI: Exam management window closed. Refreshing exam list.");
+            loadAvailableExams();
         } catch (IOException e) {
             e.printStackTrace(); // Show alert
         }

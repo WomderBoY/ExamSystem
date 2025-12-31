@@ -29,6 +29,14 @@ public class ExamManagementController {
     @FXML private TableColumn<Question, QuestionType> questionTypeColumn;
     @FXML private TableColumn<Question, Integer> questionScoreColumn;
 
+    // 1. Add FXML annotations for all the buttons we need to control.
+    @FXML private Button addExamButton;
+    @FXML private Button deleteExamButton;
+    @FXML private Button addQuestionButton;
+    @FXML private Button editQuestionButton;
+    @FXML private Button deleteQuestionButton;
+    @FXML private Button saveExamButton;
+
     private final ExamManagementService examService;
     private final ObservableList<ExamPaper> examPapers = FXCollections.observableArrayList();
     private final ObservableList<Question> currentQuestions = FXCollections.observableArrayList();
@@ -59,10 +67,15 @@ public class ExamManagementController {
 
         // Add listener for exam selection
         examListView.getSelectionModel().selectedItemProperty().addListener(
-                (obs, oldVal, newVal) -> loadExamDetails(newVal));
+                (obs, oldVal, newVal) -> {
+                    loadExamDetails(newVal);
+                    updateControlsState(newVal != null); // Enable controls on selection
+                });
 
         // Initial data load
         loadExamList();
+
+        updateControlsState(false);
     }
 
     private void loadExamList() {
@@ -98,6 +111,8 @@ public class ExamManagementController {
         currentExam = new ExamPaper(); // Prepare a new unsaved exam object
         currentExam.setExamId(UUID.randomUUID().toString());
         titleField.requestFocus();
+
+        updateControlsState(true);
     }
 
     @FXML
@@ -192,5 +207,27 @@ public class ExamManagementController {
             e.printStackTrace();
             return false;
         }
+    }
+
+    /**
+     * 4. Create a new helper method to manage the enabled/disabled state of UI controls.
+     * @param isExamActive A boolean indicating if an exam is currently selected or being created.
+     */
+    private void updateControlsState(boolean isExamActive) {
+        // Text fields for exam details
+        titleField.setDisable(!isExamActive);
+        durationField.setDisable(!isExamActive);
+        startTimeField.setDisable(!isExamActive);
+
+        // Buttons for question management
+        addQuestionButton.setDisable(!isExamActive);
+        editQuestionButton.setDisable(!isExamActive);
+        deleteQuestionButton.setDisable(!isExamActive);
+
+        // The main save button for the exam paper
+        saveExamButton.setDisable(!isExamActive);
+
+        // The "Delete Exam" button should only be enabled if an item is actually selected in the list
+        deleteExamButton.setDisable(examListView.getSelectionModel().getSelectedItem() == null);
     }
 }

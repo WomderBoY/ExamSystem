@@ -116,9 +116,14 @@
 <!--                    </Tab>-->
                 </Tab>
 <!--                <Tab text="成绩批改">-->
-<!--                    &lt;!&ndash; TODO: 在这里嵌入成绩批改的 FXML &ndash;&gt;-->
+<!--                    &lt;!&ndash; -->
 <!--                </Tab>-->
             </tabs>
         </TabPane>
     </center>
+    <bottom>
+        <HBox alignment="CENTER_LEFT" style="-fx-background-color: #f0f0f0; -fx-padding: 5 10 5 10; -fx-border-color: #c0c0c0 transparent transparent transparent; -fx-border-width: 1;">
+            <Label fx:id="statusBarLabel" text="服务器尚未启动" />
+        </HBox>
+    </bottom>
 </BorderPane>
